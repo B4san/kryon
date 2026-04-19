@@ -79,7 +79,12 @@ impl FileTree {
                 continue;
             }
             // Skip common build/dependency directories
-            if metadata.is_dir() && matches!(name.as_str(), "target" | "node_modules" | "__pycache__" | ".git") {
+            if metadata.is_dir()
+                && matches!(
+                    name.as_str(),
+                    "target" | "node_modules" | "__pycache__" | ".git"
+                )
+            {
                 continue;
             }
 
@@ -119,12 +124,10 @@ impl FileTree {
         // Reorder entries at this depth by collecting and reinserting
         // For simplicity at depth 0, just sort the entire entries vec
         if depth == 0 {
-            self.entries.sort_by(|a, b| {
-                match (a.is_dir, b.is_dir) {
-                    (true, false) => Ordering::Less,
-                    (false, true) => Ordering::Greater,
-                    _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
-                }
+            self.entries.sort_by(|a, b| match (a.is_dir, b.is_dir) {
+                (true, false) => Ordering::Less,
+                (false, true) => Ordering::Greater,
+                _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
             });
         }
     }
@@ -200,12 +203,10 @@ impl FileTree {
             let end_idx = self.entries.len();
             if start_idx < end_idx {
                 // Sort just the new children slice
-                self.entries[start_idx..end_idx].sort_by(|a, b| {
-                    match (a.is_dir, b.is_dir) {
-                        (true, false) => Ordering::Less,
-                        (false, true) => Ordering::Greater,
-                        _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
-                    }
+                self.entries[start_idx..end_idx].sort_by(|a, b| match (a.is_dir, b.is_dir) {
+                    (true, false) => Ordering::Less,
+                    (false, true) => Ordering::Greater,
+                    _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
                 });
 
                 // Register children

@@ -89,9 +89,24 @@ impl Theme {
         map.insert("keyword.return", Style::default().fg(self.keyword));
         map.insert("string", Style::default().fg(self.string));
         map.insert("string.special", Style::default().fg(self.string));
-        map.insert("comment", Style::default().fg(self.comment).add_modifier(Modifier::ITALIC));
-        map.insert("comment.line", Style::default().fg(self.comment).add_modifier(Modifier::ITALIC));
-        map.insert("comment.block", Style::default().fg(self.comment).add_modifier(Modifier::ITALIC));
+        map.insert(
+            "comment",
+            Style::default()
+                .fg(self.comment)
+                .add_modifier(Modifier::ITALIC),
+        );
+        map.insert(
+            "comment.line",
+            Style::default()
+                .fg(self.comment)
+                .add_modifier(Modifier::ITALIC),
+        );
+        map.insert(
+            "comment.block",
+            Style::default()
+                .fg(self.comment)
+                .add_modifier(Modifier::ITALIC),
+        );
         map.insert("function", Style::default().fg(self.function));
         map.insert("function.method", Style::default().fg(self.function));
         map.insert("function.builtin", Style::default().fg(self.function));
@@ -108,7 +123,10 @@ impl Theme {
         map.insert("property", Style::default().fg(self.property));
         map.insert("punctuation", Style::default().fg(self.punctuation));
         map.insert("punctuation.bracket", Style::default().fg(self.punctuation));
-        map.insert("punctuation.delimiter", Style::default().fg(self.punctuation));
+        map.insert(
+            "punctuation.delimiter",
+            Style::default().fg(self.punctuation),
+        );
         map.insert("attribute", Style::default().fg(self.attribute));
         map.insert("constant", Style::default().fg(self.constant));
         map.insert("constant.builtin", Style::default().fg(self.constant));
@@ -125,37 +143,37 @@ impl Theme {
     pub fn catppuccin_mocha() -> Self {
         Self {
             // UI
-            bg: Color::Rgb(30, 30, 46),           // Base
-            fg: Color::Rgb(205, 214, 244),         // Text
-            fg_muted: Color::Rgb(147, 153, 178),   // Overlay1
-            gutter_fg: Color::Rgb(88, 91, 112),    // Surface2
-            gutter_bg: Color::Rgb(30, 30, 46),     // Base
-            statusbar_bg: Color::Rgb(24, 24, 37),  // Mantle
-            statusbar_fg: Color::Rgb(186, 194, 222), // Subtext1
-            sidebar_bg: Color::Rgb(24, 24, 37),    // Mantle
-            sidebar_fg: Color::Rgb(166, 173, 200), // Subtext0
-            sidebar_border: Color::Rgb(69, 71, 90), // Surface1
-            accent: Color::Rgb(137, 180, 250),     // Blue
-            warning: Color::Rgb(249, 226, 175),    // Yellow
-            error: Color::Rgb(243, 139, 168),      // Red
-            cursor_line_bg: Color::Rgb(45, 45, 65), // Surface0+
-            selection_bg: Color::Rgb(69, 71, 90),  // Surface1
-            tab_bg: Color::Rgb(24, 24, 37),        // Mantle
+            bg: Color::Rgb(30, 30, 46),               // Base
+            fg: Color::Rgb(205, 214, 244),            // Text
+            fg_muted: Color::Rgb(147, 153, 178),      // Overlay1
+            gutter_fg: Color::Rgb(88, 91, 112),       // Surface2
+            gutter_bg: Color::Rgb(30, 30, 46),        // Base
+            statusbar_bg: Color::Rgb(24, 24, 37),     // Mantle
+            statusbar_fg: Color::Rgb(186, 194, 222),  // Subtext1
+            sidebar_bg: Color::Rgb(24, 24, 37),       // Mantle
+            sidebar_fg: Color::Rgb(166, 173, 200),    // Subtext0
+            sidebar_border: Color::Rgb(69, 71, 90),   // Surface1
+            accent: Color::Rgb(137, 180, 250),        // Blue
+            warning: Color::Rgb(249, 226, 175),       // Yellow
+            error: Color::Rgb(243, 139, 168),         // Red
+            cursor_line_bg: Color::Rgb(45, 45, 65),   // Surface0+
+            selection_bg: Color::Rgb(69, 71, 90),     // Surface1
+            tab_bg: Color::Rgb(24, 24, 37),           // Mantle
             tab_active_fg: Color::Rgb(205, 214, 244), // Text
             tab_inactive_fg: Color::Rgb(88, 91, 112), // Surface2
             // Syntax — Catppuccin Mocha palette
-            keyword: Color::Rgb(203, 166, 247),    // Mauve
-            string: Color::Rgb(166, 227, 161),     // Green
-            comment: Color::Rgb(108, 112, 134),    // Overlay0
-            function: Color::Rgb(137, 180, 250),   // Blue
-            type_name: Color::Rgb(249, 226, 175),  // Yellow
-            variable: Color::Rgb(205, 214, 244),   // Text
-            number: Color::Rgb(250, 179, 135),     // Peach
-            operator: Color::Rgb(148, 226, 213),   // Teal
-            property: Color::Rgb(180, 190, 254),   // Lavender
+            keyword: Color::Rgb(203, 166, 247),     // Mauve
+            string: Color::Rgb(166, 227, 161),      // Green
+            comment: Color::Rgb(108, 112, 134),     // Overlay0
+            function: Color::Rgb(137, 180, 250),    // Blue
+            type_name: Color::Rgb(249, 226, 175),   // Yellow
+            variable: Color::Rgb(205, 214, 244),    // Text
+            number: Color::Rgb(250, 179, 135),      // Peach
+            operator: Color::Rgb(148, 226, 213),    // Teal
+            property: Color::Rgb(180, 190, 254),    // Lavender
             punctuation: Color::Rgb(147, 153, 178), // Overlay1
-            attribute: Color::Rgb(249, 226, 175),  // Yellow
-            constant: Color::Rgb(250, 179, 135),   // Peach
+            attribute: Color::Rgb(249, 226, 175),   // Yellow
+            constant: Color::Rgb(250, 179, 135),    // Peach
         }
     }
 
@@ -183,18 +201,18 @@ impl Theme {
             tab_active_fg: Color::Rgb(192, 202, 245),
             tab_inactive_fg: Color::Rgb(59, 66, 97),
             // Syntax — Tokyo Night palette
-            keyword: Color::Rgb(187, 154, 247),    // Purple
-            string: Color::Rgb(158, 206, 106),     // Green
-            comment: Color::Rgb(86, 95, 137),      // Dark blue-gray
-            function: Color::Rgb(122, 162, 247),   // Blue
-            type_name: Color::Rgb(42, 195, 222),   // Cyan
-            variable: Color::Rgb(192, 202, 245),   // Foreground
-            number: Color::Rgb(255, 158, 100),     // Orange
-            operator: Color::Rgb(137, 221, 255),   // Light cyan
-            property: Color::Rgb(115, 218, 202),   // Teal
-            punctuation: Color::Rgb(86, 95, 137),  // Dark blue-gray
-            attribute: Color::Rgb(224, 175, 104),  // Yellow
-            constant: Color::Rgb(255, 158, 100),   // Orange
+            keyword: Color::Rgb(187, 154, 247),   // Purple
+            string: Color::Rgb(158, 206, 106),    // Green
+            comment: Color::Rgb(86, 95, 137),     // Dark blue-gray
+            function: Color::Rgb(122, 162, 247),  // Blue
+            type_name: Color::Rgb(42, 195, 222),  // Cyan
+            variable: Color::Rgb(192, 202, 245),  // Foreground
+            number: Color::Rgb(255, 158, 100),    // Orange
+            operator: Color::Rgb(137, 221, 255),  // Light cyan
+            property: Color::Rgb(115, 218, 202),  // Teal
+            punctuation: Color::Rgb(86, 95, 137), // Dark blue-gray
+            attribute: Color::Rgb(224, 175, 104), // Yellow
+            constant: Color::Rgb(255, 158, 100),  // Orange
         }
     }
 
@@ -222,18 +240,18 @@ impl Theme {
             tab_active_fg: Color::Rgb(248, 248, 242),
             tab_inactive_fg: Color::Rgb(98, 114, 164),
             // Syntax — Dracula palette
-            keyword: Color::Rgb(255, 121, 198),    // Pink
-            string: Color::Rgb(241, 250, 140),     // Yellow
-            comment: Color::Rgb(98, 114, 164),     // Comment blue
-            function: Color::Rgb(80, 250, 123),    // Green
-            type_name: Color::Rgb(139, 233, 253),  // Cyan
-            variable: Color::Rgb(248, 248, 242),   // Foreground
-            number: Color::Rgb(189, 147, 249),     // Purple
-            operator: Color::Rgb(255, 121, 198),   // Pink
-            property: Color::Rgb(139, 233, 253),   // Cyan
+            keyword: Color::Rgb(255, 121, 198),     // Pink
+            string: Color::Rgb(241, 250, 140),      // Yellow
+            comment: Color::Rgb(98, 114, 164),      // Comment blue
+            function: Color::Rgb(80, 250, 123),     // Green
+            type_name: Color::Rgb(139, 233, 253),   // Cyan
+            variable: Color::Rgb(248, 248, 242),    // Foreground
+            number: Color::Rgb(189, 147, 249),      // Purple
+            operator: Color::Rgb(255, 121, 198),    // Pink
+            property: Color::Rgb(139, 233, 253),    // Cyan
             punctuation: Color::Rgb(248, 248, 242), // Foreground
-            attribute: Color::Rgb(80, 250, 123),   // Green
-            constant: Color::Rgb(189, 147, 249),   // Purple
+            attribute: Color::Rgb(80, 250, 123),    // Green
+            constant: Color::Rgb(189, 147, 249),    // Purple
         }
     }
 }

@@ -110,7 +110,9 @@ impl<'a> MarkdownRenderer<'a> {
         // Horizontal rule
         let trimmed = line.trim();
         if (trimmed.starts_with("---") || trimmed.starts_with("***") || trimmed.starts_with("___"))
-            && trimmed.chars().all(|c| c == '-' || c == '*' || c == '_' || c == ' ')
+            && trimmed
+                .chars()
+                .all(|c| c == '-' || c == '*' || c == '_' || c == ' ')
             && trimmed.len() >= 3
         {
             return Line::from(Span::styled(
@@ -167,30 +169,38 @@ impl<'a> MarkdownRenderer<'a> {
         }
 
         // Unordered list
-        if let Some(rest) = trimmed.strip_prefix("- ").or_else(|| trimmed.strip_prefix("* ")) {
+        if let Some(rest) = trimmed
+            .strip_prefix("- ")
+            .or_else(|| trimmed.strip_prefix("* "))
+        {
             let indent = line.len() - line.trim_start().len();
             let prefix = " ".repeat(indent);
             return Line::from(vec![
-                Span::styled(format!("{prefix}  • "), Style::default().fg(self.theme.accent)),
+                Span::styled(
+                    format!("{prefix}  • "),
+                    Style::default().fg(self.theme.accent),
+                ),
                 Span::styled(rest.to_string(), Style::default().fg(self.theme.fg)),
             ]);
         }
 
         // Ordered list (basic: starts with digit + ". ")
-        if let Some(dot_pos) = trimmed.find(". ") {
-            if dot_pos > 0 && dot_pos <= 3 && trimmed[..dot_pos].chars().all(|c| c.is_ascii_digit()) {
-                let num = &trimmed[..dot_pos];
-                let rest = &trimmed[dot_pos + 2..];
-                let indent = line.len() - line.trim_start().len();
-                let prefix = " ".repeat(indent);
-                return Line::from(vec![
-                    Span::styled(
-                        format!("{prefix}  {num}. "),
-                        Style::default().fg(self.theme.accent),
-                    ),
-                    Span::styled(rest.to_string(), Style::default().fg(self.theme.fg)),
-                ]);
-            }
+        if let Some(dot_pos) = trimmed.find(". ")
+            && dot_pos > 0
+            && dot_pos <= 3
+            && trimmed[..dot_pos].chars().all(|c| c.is_ascii_digit())
+        {
+            let num = &trimmed[..dot_pos];
+            let rest = &trimmed[dot_pos + 2..];
+            let indent = line.len() - line.trim_start().len();
+            let prefix = " ".repeat(indent);
+            return Line::from(vec![
+                Span::styled(
+                    format!("{prefix}  {num}. "),
+                    Style::default().fg(self.theme.accent),
+                ),
+                Span::styled(rest.to_string(), Style::default().fg(self.theme.fg)),
+            ]);
         }
 
         // Inline formatting: parse bold, italic, code, and links
@@ -245,12 +255,10 @@ impl<'a> MarkdownRenderer<'a> {
                         let mut bold_text = String::new();
                         let mut found_end = false;
                         while let Some((_, bc)) = chars.next() {
-                            if bc == c {
-                                if chars.peek().map(|(_, nc)| *nc) == Some(c) {
-                                    chars.next();
-                                    found_end = true;
-                                    break;
-                                }
+                            if bc == c && chars.peek().map(|(_, nc)| *nc) == Some(c) {
+                                chars.next();
+                                found_end = true;
+                                break;
                             }
                             bold_text.push(bc);
                         }

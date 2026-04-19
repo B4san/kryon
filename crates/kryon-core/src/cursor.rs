@@ -15,7 +15,10 @@ impl Cursor {
     /// New cursor at position with no selection.
     #[must_use]
     pub fn new(position: usize) -> Self {
-        Self { anchor: position, head: position }
+        Self {
+            anchor: position,
+            head: position,
+        }
     }
 
     /// Cursor with a selection range.
@@ -26,22 +29,31 @@ impl Cursor {
 
     /// Whether this cursor has an active selection.
     #[must_use]
-    pub fn has_selection(&self) -> bool { self.anchor != self.head }
+    pub fn has_selection(&self) -> bool {
+        self.anchor != self.head
+    }
 
     /// Selection range as (start, end) where start <= end.
     #[must_use]
     pub fn selection_range(&self) -> (usize, usize) {
-        if self.anchor <= self.head { (self.anchor, self.head) }
-        else { (self.head, self.anchor) }
+        if self.anchor <= self.head {
+            (self.anchor, self.head)
+        } else {
+            (self.head, self.anchor)
+        }
     }
 
     /// Minimum of anchor and head.
     #[must_use]
-    pub fn min_offset(&self) -> usize { self.anchor.min(self.head) }
+    pub fn min_offset(&self) -> usize {
+        self.anchor.min(self.head)
+    }
 
     /// Maximum of anchor and head.
     #[must_use]
-    pub fn max_offset(&self) -> usize { self.anchor.max(self.head) }
+    pub fn max_offset(&self) -> usize {
+        self.anchor.max(self.head)
+    }
 
     /// Move cursor, collapsing any selection.
     pub fn move_to(&mut self, position: usize) {
@@ -50,7 +62,9 @@ impl Cursor {
     }
 
     /// Extend selection to new head (anchor stays fixed).
-    pub fn select_to(&mut self, position: usize) { self.head = position; }
+    pub fn select_to(&mut self, position: usize) {
+        self.head = position;
+    }
 
     /// Check if two cursors overlap.
     #[must_use]
@@ -75,13 +89,16 @@ impl Cursor {
 
 impl Ord for Cursor {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.min_offset().cmp(&other.min_offset())
+        self.min_offset()
+            .cmp(&other.min_offset())
             .then(self.max_offset().cmp(&other.max_offset()))
     }
 }
 
 impl PartialOrd for Cursor {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 /// Sorted, deduplicated collection of cursors.
@@ -93,34 +110,54 @@ pub struct CursorSet {
 impl CursorSet {
     /// Single cursor at position 0.
     #[must_use]
-    pub fn new() -> Self { Self { cursors: vec![Cursor::new(0)] } }
+    pub fn new() -> Self {
+        Self {
+            cursors: vec![Cursor::new(0)],
+        }
+    }
 
     /// Single cursor at given position.
     #[must_use]
-    pub fn at(position: usize) -> Self { Self { cursors: vec![Cursor::new(position)] } }
+    pub fn at(position: usize) -> Self {
+        Self {
+            cursors: vec![Cursor::new(position)],
+        }
+    }
 
     /// Primary cursor (index 0).
     #[must_use]
-    pub fn primary(&self) -> &Cursor { &self.cursors[0] }
+    pub fn primary(&self) -> &Cursor {
+        &self.cursors[0]
+    }
 
     /// Mutable primary cursor.
-    pub fn primary_mut(&mut self) -> &mut Cursor { &mut self.cursors[0] }
+    pub fn primary_mut(&mut self) -> &mut Cursor {
+        &mut self.cursors[0]
+    }
 
     /// All cursors.
     #[must_use]
-    pub fn all(&self) -> &[Cursor] { &self.cursors }
+    pub fn all(&self) -> &[Cursor] {
+        &self.cursors
+    }
 
     /// Cursor count.
     #[must_use]
-    pub fn len(&self) -> usize { self.cursors.len() }
+    pub fn len(&self) -> usize {
+        self.cursors.len()
+    }
 
     /// Whether the cursor set is empty (should never be true in practice).
     #[must_use]
-    pub fn is_empty(&self) -> bool { self.cursors.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.cursors.is_empty()
+    }
 
     /// Single cursor check.
     #[must_use]
-    pub fn is_single(&self) -> bool { self.cursors.len() == 1 }
+    pub fn is_single(&self) -> bool {
+        self.cursors.len() == 1
+    }
 
     /// Add a cursor and normalize.
     pub fn add(&mut self, cursor: Cursor) {
@@ -149,7 +186,9 @@ impl CursorSet {
     /// This method will not panic. The internal `expect` is guarded by
     /// the initialization of `merged` with at least one element.
     pub fn normalize(&mut self) {
-        if self.cursors.len() <= 1 { return; }
+        if self.cursors.len() <= 1 {
+            return;
+        }
         self.cursors.sort();
         let mut merged: Vec<Cursor> = Vec::with_capacity(self.cursors.len());
         merged.push(self.cursors[0]);
@@ -166,14 +205,24 @@ impl CursorSet {
 }
 
 impl Default for CursorSet {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 fn adjust_single(offset: usize, edit_pos: usize, delta: isize) -> usize {
-    if offset < edit_pos { return offset; }
-    if delta >= 0 { return offset + delta.cast_unsigned(); }
+    if offset < edit_pos {
+        return offset;
+    }
+    if delta >= 0 {
+        return offset + delta.cast_unsigned();
+    }
     let abs_delta = (-delta).cast_unsigned();
-    if offset >= edit_pos + abs_delta { offset - abs_delta } else { edit_pos }
+    if offset >= edit_pos + abs_delta {
+        offset - abs_delta
+    } else {
+        edit_pos
+    }
 }
 
 #[cfg(test)]

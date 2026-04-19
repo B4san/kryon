@@ -38,7 +38,11 @@ impl EditCommand {
     /// # Errors
     ///
     /// Returns `BufferError` if the operation fails.
-    pub fn execute(&self, buffer: &mut TextBuffer, cursors: &mut CursorSet) -> Result<(), BufferError> {
+    pub fn execute(
+        &self,
+        buffer: &mut TextBuffer,
+        cursors: &mut CursorSet,
+    ) -> Result<(), BufferError> {
         match self {
             EditCommand::Insert { offset, text } => {
                 buffer.insert(*offset, text)?;
@@ -50,7 +54,9 @@ impl EditCommand {
                 let delta = -(range.len().cast_signed());
                 cursors.adjust_offsets(range.start, delta);
             }
-            EditCommand::Replace { range, new_text, .. } => {
+            EditCommand::Replace {
+                range, new_text, ..
+            } => {
                 buffer.delete(range.clone())?;
                 buffer.insert(range.start, new_text)?;
                 let delta = new_text.len().cast_signed() - range.len().cast_signed();
@@ -65,7 +71,11 @@ impl EditCommand {
     /// # Errors
     ///
     /// Returns `BufferError` if the undo fails.
-    pub fn undo(&self, buffer: &mut TextBuffer, cursors: &mut CursorSet) -> Result<(), BufferError> {
+    pub fn undo(
+        &self,
+        buffer: &mut TextBuffer,
+        cursors: &mut CursorSet,
+    ) -> Result<(), BufferError> {
         match self {
             EditCommand::Insert { offset, text } => {
                 let end = *offset + text.chars().count();
@@ -73,12 +83,19 @@ impl EditCommand {
                 let delta = -(text.len().cast_signed());
                 cursors.adjust_offsets(*offset, delta);
             }
-            EditCommand::Delete { range, deleted_text } => {
+            EditCommand::Delete {
+                range,
+                deleted_text,
+            } => {
                 buffer.insert(range.start, deleted_text)?;
                 let delta = deleted_text.len().cast_signed();
                 cursors.adjust_offsets(range.start, delta);
             }
-            EditCommand::Replace { range, new_text, old_text } => {
+            EditCommand::Replace {
+                range,
+                new_text,
+                old_text,
+            } => {
                 let new_end = range.start + new_text.chars().count();
                 buffer.delete(range.start..new_end)?;
                 buffer.insert(range.start, old_text)?;
@@ -137,11 +154,15 @@ impl CommandHistory {
 
     /// Whether there are commands to undo.
     #[must_use]
-    pub fn can_undo(&self) -> bool { !self.undo_stack.is_empty() }
+    pub fn can_undo(&self) -> bool {
+        !self.undo_stack.is_empty()
+    }
 
     /// Whether there are commands to redo.
     #[must_use]
-    pub fn can_redo(&self) -> bool { !self.redo_stack.is_empty() }
+    pub fn can_redo(&self) -> bool {
+        !self.redo_stack.is_empty()
+    }
 
     /// Clear all history.
     pub fn clear(&mut self) {
@@ -151,7 +172,9 @@ impl CommandHistory {
 }
 
 impl Default for CommandHistory {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[cfg(test)]
@@ -162,7 +185,10 @@ mod tests {
     fn test_insert_and_undo() {
         let mut buf = TextBuffer::from_text("hello");
         let mut cursors = CursorSet::at(5);
-        let cmd = EditCommand::Insert { offset: 5, text: " world".to_string() };
+        let cmd = EditCommand::Insert {
+            offset: 5,
+            text: " world".to_string(),
+        };
         cmd.execute(&mut buf, &mut cursors).unwrap();
         assert_eq!(buf.text(), "hello world");
         cmd.undo(&mut buf, &mut cursors).unwrap();
@@ -173,7 +199,10 @@ mod tests {
     fn test_delete_and_undo() {
         let mut buf = TextBuffer::from_text("hello world");
         let mut cursors = CursorSet::at(0);
-        let cmd = EditCommand::Delete { range: 5..11, deleted_text: " world".to_string() };
+        let cmd = EditCommand::Delete {
+            range: 5..11,
+            deleted_text: " world".to_string(),
+        };
         cmd.execute(&mut buf, &mut cursors).unwrap();
         assert_eq!(buf.text(), "hello");
         cmd.undo(&mut buf, &mut cursors).unwrap();
@@ -183,7 +212,10 @@ mod tests {
     #[test]
     fn test_history_undo_redo() {
         let mut history = CommandHistory::new();
-        let cmd = EditCommand::Insert { offset: 0, text: "a".to_string() };
+        let cmd = EditCommand::Insert {
+            offset: 0,
+            text: "a".to_string(),
+        };
         history.push(cmd);
         assert!(history.can_undo());
         assert!(!history.can_redo());
@@ -201,13 +233,22 @@ mod tests {
     #[test]
     fn test_history_new_edit_clears_redo() {
         let mut history = CommandHistory::new();
-        history.push(EditCommand::Insert { offset: 0, text: "a".to_string() });
-        history.push(EditCommand::Insert { offset: 1, text: "b".to_string() });
+        history.push(EditCommand::Insert {
+            offset: 0,
+            text: "a".to_string(),
+        });
+        history.push(EditCommand::Insert {
+            offset: 1,
+            text: "b".to_string(),
+        });
         history.undo();
         assert!(history.can_redo());
 
         // New edit should clear redo
-        history.push(EditCommand::Insert { offset: 1, text: "c".to_string() });
+        history.push(EditCommand::Insert {
+            offset: 1,
+            text: "c".to_string(),
+        });
         assert!(!history.can_redo());
     }
 }

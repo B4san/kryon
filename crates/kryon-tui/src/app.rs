@@ -12,7 +12,9 @@
     clippy::too_many_lines,           // update() is necessarily large due to action matching
 )]
 
-use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseButton, MouseEventKind};
+use crossterm::event::{
+    KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseButton, MouseEventKind,
+};
 use futures::StreamExt;
 use ratatui::{
     prelude::*,
@@ -82,9 +84,7 @@ impl BufferState {
     /// Create a buffer state from file content.
     #[must_use]
     pub fn from_file(text: &str, path: PathBuf, theme: &Theme) -> Self {
-        let ext = path.extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("");
+        let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
         let highlighter = SyntaxHighlighter::for_extension(ext, theme);
         Self {
             buffer: TextBuffer::from_text(text),
@@ -100,14 +100,20 @@ impl BufferState {
     /// Get display name for this buffer.
     #[must_use]
     pub fn display_name(&self) -> String {
-        self.file_path.as_ref()
+        self.file_path
+            .as_ref()
             .and_then(|p| p.file_name())
-            .map_or_else(|| "Untitled".to_string(), |n| n.to_string_lossy().to_string())
+            .map_or_else(
+                || "Untitled".to_string(),
+                |n| n.to_string_lossy().to_string(),
+            )
     }
 }
 
 impl Default for BufferState {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Main application state.
@@ -248,8 +254,16 @@ impl App {
             (KeyModifiers::CONTROL, KeyCode::Left) => EditorAction::MoveWordLeft,
             (KeyModifiers::CONTROL, KeyCode::Right) => EditorAction::MoveWordRight,
             // Selection + word
-            (m, KeyCode::Left) if m.contains(KeyModifiers::CONTROL) && m.contains(KeyModifiers::SHIFT) => EditorAction::SelectWordLeft,
-            (m, KeyCode::Right) if m.contains(KeyModifiers::CONTROL) && m.contains(KeyModifiers::SHIFT) => EditorAction::SelectWordRight,
+            (m, KeyCode::Left)
+                if m.contains(KeyModifiers::CONTROL) && m.contains(KeyModifiers::SHIFT) =>
+            {
+                EditorAction::SelectWordLeft
+            }
+            (m, KeyCode::Right)
+                if m.contains(KeyModifiers::CONTROL) && m.contains(KeyModifiers::SHIFT) =>
+            {
+                EditorAction::SelectWordRight
+            }
             // Selection
             (KeyModifiers::SHIFT, KeyCode::Left) => EditorAction::SelectLeft,
             (KeyModifiers::SHIFT, KeyCode::Right) => EditorAction::SelectRight,
@@ -270,7 +284,9 @@ impl App {
             (KeyModifiers::NONE, KeyCode::Delete) => EditorAction::DeleteForward,
             (KeyModifiers::NONE, KeyCode::Enter) => EditorAction::InsertChar('\n'),
             (KeyModifiers::NONE, KeyCode::Tab) => EditorAction::InsertText("    ".to_string()),
-            (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c)) => EditorAction::InsertChar(c),
+            (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c)) => {
+                EditorAction::InsertChar(c)
+            }
             (KeyModifiers::NONE, KeyCode::Esc) => EditorAction::CloseOverlay,
             // Tab switching: Ctrl+PageDown/Up
             (KeyModifiers::CONTROL, KeyCode::PageDown) => EditorAction::NextBuffer,
@@ -343,7 +359,10 @@ impl App {
                 let head = bs.cursors.primary().head;
                 if head > 0 {
                     let deleted = bs.buffer.rope().slice(head - 1..head).to_string();
-                    let cmd = EditCommand::Delete { range: (head - 1)..head, deleted_text: deleted };
+                    let cmd = EditCommand::Delete {
+                        range: (head - 1)..head,
+                        deleted_text: deleted,
+                    };
                     if cmd.execute(&mut bs.buffer, &mut bs.cursors).is_ok() {
                         bs.history.push(cmd);
                     }
@@ -355,7 +374,10 @@ impl App {
                 let len = bs.buffer.len_chars();
                 if head < len {
                     let deleted = bs.buffer.rope().slice(head..head + 1).to_string();
-                    let cmd = EditCommand::Delete { range: head..head + 1, deleted_text: deleted };
+                    let cmd = EditCommand::Delete {
+                        range: head..head + 1,
+                        deleted_text: deleted,
+                    };
                     if cmd.execute(&mut bs.buffer, &mut bs.cursors).is_ok() {
                         bs.history.push(cmd);
                     }
@@ -363,12 +385,16 @@ impl App {
             }
             EditorAction::MoveLeft => {
                 let head = self.buffers[idx].cursors.primary().head;
-                if head > 0 { self.buffers[idx].cursors.primary_mut().move_to(head - 1); }
+                if head > 0 {
+                    self.buffers[idx].cursors.primary_mut().move_to(head - 1);
+                }
             }
             EditorAction::MoveRight => {
                 let head = self.buffers[idx].cursors.primary().head;
                 let len = self.buffers[idx].buffer.len_chars();
-                if head < len { self.buffers[idx].cursors.primary_mut().move_to(head + 1); }
+                if head < len {
+                    self.buffers[idx].cursors.primary_mut().move_to(head + 1);
+                }
             }
             EditorAction::MoveUp => {
                 let bs = &mut self.buffers[idx];
@@ -457,12 +483,16 @@ impl App {
             // ── Selection ────────────────────────────────────────
             EditorAction::SelectLeft => {
                 let head = self.buffers[idx].cursors.primary().head;
-                if head > 0 { self.buffers[idx].cursors.primary_mut().select_to(head - 1); }
+                if head > 0 {
+                    self.buffers[idx].cursors.primary_mut().select_to(head - 1);
+                }
             }
             EditorAction::SelectRight => {
                 let head = self.buffers[idx].cursors.primary().head;
                 let len = self.buffers[idx].buffer.len_chars();
-                if head < len { self.buffers[idx].cursors.primary_mut().select_to(head + 1); }
+                if head < len {
+                    self.buffers[idx].cursors.primary_mut().select_to(head + 1);
+                }
             }
             EditorAction::SelectUp => {
                 let bs = &mut self.buffers[idx];
@@ -631,7 +661,8 @@ impl App {
             EditorAction::CloseBuffer => {
                 if self.buffers.len() > 1 {
                     if self.buffers[idx].buffer.is_modified() {
-                        self.status_message = "Unsaved changes! Save first or use force close.".to_string();
+                        self.status_message =
+                            "Unsaved changes! Save first or use force close.".to_string();
                     } else {
                         self.buffers.remove(idx);
                         if self.active_buffer >= self.buffers.len() {
@@ -643,21 +674,21 @@ impl App {
                     self.status_message = "Cannot close last buffer".to_string();
                 }
             }
-            EditorAction::NextBuffer
-                if !self.buffers.is_empty() => {
-                    self.active_buffer = (self.active_buffer + 1) % self.buffers.len();
-                }
-            EditorAction::PrevBuffer
-                if !self.buffers.is_empty() => {
-                    self.active_buffer = if self.active_buffer == 0 {
-                        self.buffers.len() - 1
-                    } else {
-                        self.active_buffer - 1
-                    };
-                }
+            EditorAction::NextBuffer if !self.buffers.is_empty() => {
+                self.active_buffer = (self.active_buffer + 1) % self.buffers.len();
+            }
+            EditorAction::PrevBuffer if !self.buffers.is_empty() => {
+                self.active_buffer = if self.active_buffer == 0 {
+                    self.buffers.len() - 1
+                } else {
+                    self.active_buffer - 1
+                };
+            }
             EditorAction::TogglePreview => {
                 let bs = &mut self.buffers[self.active_buffer];
-                let is_md = bs.file_path.as_ref()
+                let is_md = bs
+                    .file_path
+                    .as_ref()
                     .and_then(|p| p.extension())
                     .is_some_and(|e| e == "md" || e == "markdown");
                 if is_md {
@@ -679,13 +710,16 @@ impl App {
                 if let Some(ref path) = bs.file_path {
                     if let Some(config) = terminal_panel::detect_run_command(path) {
                         let cwd = if config.use_file_dir {
-                            path.parent().map(|p| p.to_path_buf())
-                                .unwrap_or_else(|| PathBuf::from("."))
+                            path.parent()
+                                .map_or_else(|| PathBuf::from("."), std::path::Path::to_path_buf)
                         } else {
-                            self.workspace_root.clone().unwrap_or_else(|| PathBuf::from("."))
+                            self.workspace_root
+                                .clone()
+                                .unwrap_or_else(|| PathBuf::from("."))
                         };
                         let args: Vec<&str> = config.args.iter().map(String::as_str).collect();
-                        self.terminal_panel.run_command(&config.command, &args, &cwd);
+                        self.terminal_panel
+                            .run_command(&config.command, &args, &cwd);
                     } else {
                         self.status_message = "No runner detected for this file type".to_string();
                         self.terminal_panel.visible = true;
@@ -776,7 +810,8 @@ impl App {
         if self.terminal_panel.visible {
             let term_idx = 2;
             self.terminal_area = Some(outer[term_idx]);
-            self.terminal_panel.draw(frame, outer[term_idx], &self.theme);
+            self.terminal_panel
+                .draw(frame, outer[term_idx], &self.theme);
         } else {
             self.terminal_area = None;
         }
@@ -791,13 +826,16 @@ impl App {
     }
 
     fn draw_tab_bar(&self, frame: &mut Frame, area: Rect) {
-        let entries: Vec<TabEntry> = self.buffers.iter().enumerate().map(|(i, bs)| {
-            TabEntry {
+        let entries: Vec<TabEntry> = self
+            .buffers
+            .iter()
+            .enumerate()
+            .map(|(i, bs)| TabEntry {
                 name: bs.display_name(),
                 modified: bs.buffer.is_modified(),
                 active: i == self.active_buffer,
-            }
-        }).collect();
+            })
+            .collect();
 
         let tab_bar = TabBar {
             tabs: &entries,
@@ -842,10 +880,17 @@ impl App {
         let end_line = (scroll + visible_lines).min(line_count);
         let mut line_nums = String::new();
         for i in scroll..end_line {
-            line_nums.push_str(&format!("{:>width$} \n", i + 1, width = gutter_width as usize - 2));
+            line_nums.push_str(&format!(
+                "{:>width$} \n",
+                i + 1,
+                width = gutter_width as usize - 2
+            ));
         }
-        let gutter = Paragraph::new(line_nums)
-            .style(Style::default().fg(self.theme.gutter_fg).bg(self.theme.gutter_bg));
+        let gutter = Paragraph::new(line_nums).style(
+            Style::default()
+                .fg(self.theme.gutter_fg)
+                .bg(self.theme.gutter_bg),
+        );
         frame.render_widget(gutter, chunks[0]);
 
         // Code content — BATCH viewport highlighting (performance fix)
@@ -887,7 +932,8 @@ impl App {
 
     fn draw_status_bar(&self, frame: &mut Frame, area: Rect) {
         let bs = &self.buffers[self.active_buffer];
-        let (line, col) = bs.buffer
+        let (line, col) = bs
+            .buffer
             .offset_to_line_col(bs.cursors.primary().head)
             .unwrap_or((0, 0));
 
@@ -903,8 +949,11 @@ impl App {
             modified,
         );
 
-        let bar = Paragraph::new(status)
-            .style(Style::default().bg(self.theme.statusbar_bg).fg(self.theme.statusbar_fg));
+        let bar = Paragraph::new(status).style(
+            Style::default()
+                .bg(self.theme.statusbar_bg)
+                .fg(self.theme.statusbar_fg),
+        );
         frame.render_widget(bar, area);
     }
 
@@ -939,10 +988,16 @@ impl App {
         let sidebar_block = Block::default()
             .title(" Explorer ")
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(
-                if self.sidebar_focused { self.theme.accent } else { self.theme.sidebar_border }
-            ))
-            .style(Style::default().bg(self.theme.sidebar_bg).fg(self.theme.sidebar_fg));
+            .border_style(Style::default().fg(if self.sidebar_focused {
+                self.theme.accent
+            } else {
+                self.theme.sidebar_border
+            }))
+            .style(
+                Style::default()
+                    .bg(self.theme.sidebar_bg)
+                    .fg(self.theme.sidebar_fg),
+            );
 
         let inner = sidebar_block.inner(area);
         frame.render_widget(sidebar_block, area);
@@ -982,9 +1037,7 @@ impl App {
                 let padded = format!("{truncated:<max_width$}");
 
                 let style = if entry.selected {
-                    Style::default()
-                        .bg(self.theme.accent)
-                        .fg(self.theme.bg)
+                    Style::default().bg(self.theme.accent).fg(self.theme.bg)
                 } else if entry.is_dir {
                     Style::default().fg(self.theme.accent)
                 } else {
@@ -1000,13 +1053,13 @@ impl App {
 
             // If tree is empty, show hint
             if entries.is_empty() {
-                let hint = Paragraph::new("  (empty)")
-                    .style(Style::default().fg(self.theme.gutter_fg));
+                let hint =
+                    Paragraph::new("  (empty)").style(Style::default().fg(self.theme.gutter_fg));
                 frame.render_widget(hint, inner);
             }
         } else {
-            let hint = Paragraph::new("  No workspace")
-                .style(Style::default().fg(self.theme.gutter_fg));
+            let hint =
+                Paragraph::new("  No workspace").style(Style::default().fg(self.theme.gutter_fg));
             frame.render_widget(hint, inner);
         }
     }
@@ -1084,7 +1137,9 @@ impl App {
 }
 
 impl Default for App {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Run the main event loop (async for subprocess support).
@@ -1111,188 +1166,212 @@ pub async fn run(terminal: &mut crate::terminal::Tui, app: &mut App) -> std::io:
             ev = event_stream.next() => ev,
             () = tokio::time::sleep(std::time::Duration::from_millis(32)) => { continue; }
         };
-        let Some(event_result) = event else { break; };
-        let Ok(event) = event_result else { continue; };
+        let Some(event_result) = event else {
+            break;
+        };
+        let Ok(event) = event_result else {
+            continue;
+        };
 
         match event {
             Event::Key(key) => {
-                    // ── BUG FIX: Only process Press events ──────────
-                    // On Windows, crossterm fires both Press and Release
-                    // events for each keystroke. Without this filter,
-                    // every character gets inserted twice.
-                    if key.kind != KeyEventKind::Press {
-                        continue;
-                    }
+                // ── BUG FIX: Only process Press events ──────────
+                // On Windows, crossterm fires both Press and Release
+                // events for each keystroke. Without this filter,
+                // every character gets inserted twice.
+                if key.kind != KeyEventKind::Press {
+                    continue;
+                }
 
-                    // In Search/GoToLine mode, route typing to the overlay input
-                    if app.search.visible {
-                        match (key.modifiers, key.code) {
-                            (KeyModifiers::NONE, KeyCode::Esc) => {
-                                app.update(EditorAction::CloseOverlay);
-                            }
-                            (KeyModifiers::NONE, KeyCode::Enter) => {
-                                let query = app.search.query.clone();
-                                app.update(EditorAction::SubmitSearchQuery(query));
-                            }
-                            (KeyModifiers::NONE, KeyCode::Backspace) => {
-                                app.search.query.pop();
-                                // Live search: update matches as user types
-                                let query = app.search.query.clone();
-                                let matches = app.buffers[app.active_buffer].buffer.find_all(&query);
-                                app.search.set_query(query, matches);
-                            }
-                            (KeyModifiers::NONE, KeyCode::F(3)) => {
-                                app.update(EditorAction::SearchNext);
-                            }
-                            (KeyModifiers::SHIFT, KeyCode::F(3)) => {
-                                app.update(EditorAction::SearchPrev);
-                            }
-                            (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c)) => {
-                                app.search.query.push(c);
-                                // Live search
-                                let query = app.search.query.clone();
-                                let matches = app.buffers[app.active_buffer].buffer.find_all(&query);
-                                app.search.set_query(query, matches);
-                                if let Some(offset) = app.search.active_offset() {
-                                    app.buffers[app.active_buffer].cursors.primary_mut().move_to(offset);
-                                    app.scroll_to_cursor();
-                                }
-                            }
-                            _ => {}
+                // In Search/GoToLine mode, route typing to the overlay input
+                if app.search.visible {
+                    match (key.modifiers, key.code) {
+                        (KeyModifiers::NONE, KeyCode::Esc) => {
+                            app.update(EditorAction::CloseOverlay);
                         }
-                    } else if app.goto_line.visible {
-                        match (key.modifiers, key.code) {
-                            (KeyModifiers::NONE, KeyCode::Esc) => {
-                                app.update(EditorAction::CloseOverlay);
-                            }
-                            (KeyModifiers::NONE, KeyCode::Enter) => {
-                                let input = app.goto_line.input.clone();
-                                app.update(EditorAction::SubmitGoToLine(input));
-                            }
-                            (KeyModifiers::NONE, KeyCode::Backspace) => {
-                                app.goto_line.input.pop();
-                            }
-                            (KeyModifiers::NONE, KeyCode::Char(c)) if c.is_ascii_digit() => {
-                                app.goto_line.input.push(c);
-                            }
-                            _ => {}
+                        (KeyModifiers::NONE, KeyCode::Enter) => {
+                            let query = app.search.query.clone();
+                            app.update(EditorAction::SubmitSearchQuery(query));
                         }
-                    } else if app.sidebar_focused {
-                        // ── Sidebar keyboard navigation ────────────
-                        match (key.modifiers, key.code) {
-                            (KeyModifiers::NONE, KeyCode::Up) => {
-                                if let Some(ref mut tree) = app.file_tree {
-                                    tree.move_up();
-                                }
+                        (KeyModifiers::NONE, KeyCode::Backspace) => {
+                            app.search.query.pop();
+                            // Live search: update matches as user types
+                            let query = app.search.query.clone();
+                            let matches = app.buffers[app.active_buffer].buffer.find_all(&query);
+                            app.search.set_query(query, matches);
+                        }
+                        (KeyModifiers::NONE, KeyCode::F(3)) => {
+                            app.update(EditorAction::SearchNext);
+                        }
+                        (KeyModifiers::SHIFT, KeyCode::F(3)) => {
+                            app.update(EditorAction::SearchPrev);
+                        }
+                        (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c)) => {
+                            app.search.query.push(c);
+                            // Live search
+                            let query = app.search.query.clone();
+                            let matches = app.buffers[app.active_buffer].buffer.find_all(&query);
+                            app.search.set_query(query, matches);
+                            if let Some(offset) = app.search.active_offset() {
+                                app.buffers[app.active_buffer]
+                                    .cursors
+                                    .primary_mut()
+                                    .move_to(offset);
+                                app.scroll_to_cursor();
                             }
-                            (KeyModifiers::NONE, KeyCode::Down) => {
-                                if let Some(ref mut tree) = app.file_tree {
-                                    tree.move_down();
-                                }
+                        }
+                        _ => {}
+                    }
+                } else if app.goto_line.visible {
+                    match (key.modifiers, key.code) {
+                        (KeyModifiers::NONE, KeyCode::Esc) => {
+                            app.update(EditorAction::CloseOverlay);
+                        }
+                        (KeyModifiers::NONE, KeyCode::Enter) => {
+                            let input = app.goto_line.input.clone();
+                            app.update(EditorAction::SubmitGoToLine(input));
+                        }
+                        (KeyModifiers::NONE, KeyCode::Backspace) => {
+                            app.goto_line.input.pop();
+                        }
+                        (KeyModifiers::NONE, KeyCode::Char(c)) if c.is_ascii_digit() => {
+                            app.goto_line.input.push(c);
+                        }
+                        _ => {}
+                    }
+                } else if app.sidebar_focused {
+                    // ── Sidebar keyboard navigation ────────────
+                    match (key.modifiers, key.code) {
+                        (KeyModifiers::NONE, KeyCode::Up) => {
+                            if let Some(ref mut tree) = app.file_tree {
+                                tree.move_up();
                             }
-                            (KeyModifiers::NONE, KeyCode::Enter | KeyCode::Right) => {
-                                let path = app.file_tree.as_mut().and_then(FileTree::activate);
-                                if let Some(p) = path {
-                                    app.open_file_from_path(p);
-                                    app.sidebar_focused = false;
-                                }
+                        }
+                        (KeyModifiers::NONE, KeyCode::Down) => {
+                            if let Some(ref mut tree) = app.file_tree {
+                                tree.move_down();
                             }
-                            (KeyModifiers::NONE, KeyCode::Left) => {
-                                // Collapse current directory or move to parent
-                                if let Some(ref mut tree) = app.file_tree {
-                                    if tree.is_dir_at(tree.selected) {
-                                        tree.toggle(tree.selected);
-                                    }
-                                }
-                            }
-                            (KeyModifiers::NONE, KeyCode::Esc | KeyCode::Tab) => {
+                        }
+                        (KeyModifiers::NONE, KeyCode::Enter | KeyCode::Right) => {
+                            let path = app.file_tree.as_mut().and_then(FileTree::activate);
+                            if let Some(p) = path {
+                                app.open_file_from_path(p);
                                 app.sidebar_focused = false;
                             }
-                            (KeyModifiers::CONTROL, KeyCode::Char('b')) => {
-                                app.update(EditorAction::ToggleSidebar);
-                            }
-                            (KeyModifiers::CONTROL, KeyCode::Char('q')) => {
-                                app.update(EditorAction::Quit);
-                            }
-                            _ => {}
                         }
-                    } else if app.terminal_panel.focused {
-                        // ── Terminal panel keyboard handling ────────
-                        match (key.modifiers, key.code) {
-                            (KeyModifiers::NONE, KeyCode::Esc) => {
-                                app.terminal_panel.focused = false;
-                                app.dirty = true;
-                            }
-                            (KeyModifiers::CONTROL, KeyCode::Char('`')) => {
-                                app.update(EditorAction::ToggleTerminal);
-                            }
-                            (KeyModifiers::CONTROL, KeyCode::Char('q')) => {
-                                app.update(EditorAction::Quit);
-                            }
-                            (KeyModifiers::NONE, KeyCode::F(5)) => {
-                                app.update(EditorAction::RunCurrentFile);
-                            }
-                            _ => {}
-                        }
-                    } else {
-                        // ── Normal editor key handling ─────────────
-                        let action = app.map_key(key);
-                        app.update(action);
-                    }
-                }
-            Event::Mouse(mouse) => {
-                match mouse.kind {
-                    MouseEventKind::Down(MouseButton::Left) => {
-                        if app.sidebar_visible && app.is_in_sidebar(mouse.column, mouse.row) {
-                            app.sidebar_focused = true;
-                            app.terminal_panel.focused = false;
-                            if let Some(row) = app.sidebar_click_row(mouse.row) {
-                                let scroll = app.sidebar_scroll;
-                                let path = app.file_tree.as_mut().and_then(|t| t.handle_click(row, scroll));
-                                if let Some(p) = path {
-                                    app.open_file_from_path(p);
-                                    app.sidebar_focused = false;
+                        (KeyModifiers::NONE, KeyCode::Left) => {
+                            // Collapse current directory or move to parent
+                            if let Some(ref mut tree) = app.file_tree {
+                                if tree.is_dir_at(tree.selected) {
+                                    tree.toggle(tree.selected);
                                 }
                             }
-                            app.dirty = true;
-                        } else if app.terminal_panel.visible && app.is_in_terminal(mouse.column, mouse.row) {
-                            app.terminal_panel.focused = true;
+                        }
+                        (KeyModifiers::NONE, KeyCode::Esc | KeyCode::Tab) => {
                             app.sidebar_focused = false;
-                            app.dirty = true;
-                        } else {
-                            app.sidebar_focused = false;
+                        }
+                        (KeyModifiers::CONTROL, KeyCode::Char('b')) => {
+                            app.update(EditorAction::ToggleSidebar);
+                        }
+                        (KeyModifiers::CONTROL, KeyCode::Char('q')) => {
+                            app.update(EditorAction::Quit);
+                        }
+                        _ => {}
+                    }
+                } else if app.terminal_panel.focused {
+                    // ── Terminal panel keyboard handling ────────
+                    match (key.modifiers, key.code) {
+                        (KeyModifiers::NONE, KeyCode::Esc) => {
                             app.terminal_panel.focused = false;
-                            if let Some((line, col)) = app.map_mouse_to_buffer(mouse.column, mouse.row) {
-                                app.update(EditorAction::MouseClick { line, col });
-                            }
+                            app.dirty = true;
                         }
-                    }
-                    MouseEventKind::ScrollUp => {
-                        if app.sidebar_visible && app.is_in_sidebar(mouse.column, mouse.row) {
-                            app.sidebar_scroll = app.sidebar_scroll.saturating_sub(3);
-                            app.dirty = true;
-                        } else if app.terminal_panel.visible && app.is_in_terminal(mouse.column, mouse.row) {
-                            app.terminal_panel.scroll_up(3);
-                            app.dirty = true;
-                        } else {
-                            app.update(EditorAction::MouseScroll { direction: ScrollDirection::Up, amount: 3 });
+                        (KeyModifiers::CONTROL, KeyCode::Char('`')) => {
+                            app.update(EditorAction::ToggleTerminal);
                         }
-                    }
-                    MouseEventKind::ScrollDown => {
-                        if app.sidebar_visible && app.is_in_sidebar(mouse.column, mouse.row) {
-                            let max = app.file_tree.as_ref().map_or(0, |t| t.visible_count().saturating_sub(1));
-                            app.sidebar_scroll = (app.sidebar_scroll + 3).min(max);
-                            app.dirty = true;
-                        } else if app.terminal_panel.visible && app.is_in_terminal(mouse.column, mouse.row) {
-                            app.terminal_panel.scroll_down(3);
-                            app.dirty = true;
-                        } else {
-                            app.update(EditorAction::MouseScroll { direction: ScrollDirection::Down, amount: 3 });
+                        (KeyModifiers::CONTROL, KeyCode::Char('q')) => {
+                            app.update(EditorAction::Quit);
                         }
+                        (KeyModifiers::NONE, KeyCode::F(5)) => {
+                            app.update(EditorAction::RunCurrentFile);
+                        }
+                        _ => {}
                     }
-                    _ => {}
+                } else {
+                    // ── Normal editor key handling ─────────────
+                    let action = app.map_key(key);
+                    app.update(action);
                 }
             }
+            Event::Mouse(mouse) => match mouse.kind {
+                MouseEventKind::Down(MouseButton::Left) => {
+                    if app.sidebar_visible && app.is_in_sidebar(mouse.column, mouse.row) {
+                        app.sidebar_focused = true;
+                        app.terminal_panel.focused = false;
+                        if let Some(row) = app.sidebar_click_row(mouse.row) {
+                            let scroll = app.sidebar_scroll;
+                            let path = app
+                                .file_tree
+                                .as_mut()
+                                .and_then(|t| t.handle_click(row, scroll));
+                            if let Some(p) = path {
+                                app.open_file_from_path(p);
+                                app.sidebar_focused = false;
+                            }
+                        }
+                        app.dirty = true;
+                    } else if app.terminal_panel.visible
+                        && app.is_in_terminal(mouse.column, mouse.row)
+                    {
+                        app.terminal_panel.focused = true;
+                        app.sidebar_focused = false;
+                        app.dirty = true;
+                    } else {
+                        app.sidebar_focused = false;
+                        app.terminal_panel.focused = false;
+                        if let Some((line, col)) = app.map_mouse_to_buffer(mouse.column, mouse.row)
+                        {
+                            app.update(EditorAction::MouseClick { line, col });
+                        }
+                    }
+                }
+                MouseEventKind::ScrollUp => {
+                    if app.sidebar_visible && app.is_in_sidebar(mouse.column, mouse.row) {
+                        app.sidebar_scroll = app.sidebar_scroll.saturating_sub(3);
+                        app.dirty = true;
+                    } else if app.terminal_panel.visible
+                        && app.is_in_terminal(mouse.column, mouse.row)
+                    {
+                        app.terminal_panel.scroll_up(3);
+                        app.dirty = true;
+                    } else {
+                        app.update(EditorAction::MouseScroll {
+                            direction: ScrollDirection::Up,
+                            amount: 3,
+                        });
+                    }
+                }
+                MouseEventKind::ScrollDown => {
+                    if app.sidebar_visible && app.is_in_sidebar(mouse.column, mouse.row) {
+                        let max = app
+                            .file_tree
+                            .as_ref()
+                            .map_or(0, |t| t.visible_count().saturating_sub(1));
+                        app.sidebar_scroll = (app.sidebar_scroll + 3).min(max);
+                        app.dirty = true;
+                    } else if app.terminal_panel.visible
+                        && app.is_in_terminal(mouse.column, mouse.row)
+                    {
+                        app.terminal_panel.scroll_down(3);
+                        app.dirty = true;
+                    } else {
+                        app.update(EditorAction::MouseScroll {
+                            direction: ScrollDirection::Down,
+                            amount: 3,
+                        });
+                    }
+                }
+                _ => {}
+            },
             Event::Resize(..) => {
                 app.dirty = true;
             }
@@ -1301,4 +1380,3 @@ pub async fn run(terminal: &mut crate::terminal::Tui, app: &mut App) -> std::io:
     }
     Ok(())
 }
-
