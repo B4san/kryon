@@ -53,7 +53,11 @@ pub enum SubprocessError {
 ///
 /// Returns `SubprocessError::SpawnFailed` if the process cannot be started.
 /// Returns `SubprocessError::NonZeroExit` if the process exits with a non-zero code.
-pub fn safe_exec<S, I, A>(program: S, args: I, working_dir: &Path) -> Result<Output, SubprocessError>
+pub fn safe_exec<S, I, A>(
+    program: S,
+    args: I,
+    working_dir: &Path,
+) -> Result<Output, SubprocessError>
 where
     S: AsRef<OsStr>,
     I: IntoIterator<Item = A>,

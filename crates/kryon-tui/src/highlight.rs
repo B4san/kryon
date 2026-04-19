@@ -8,7 +8,7 @@
 //!
 //! The key optimisation is `highlight_viewport()`: it collects the full
 //! source text **once**, runs tree-sitter **once** for the visible range,
-//! and slices the results per-line. This avoids the O(n × visible_lines)
+//! and slices the results per-line. This avoids the `O(n x visible_lines)`
 //! allocation that per-line highlighting would cause.
 
 #![allow(clippy::cast_possible_truncation)]
@@ -84,7 +84,7 @@ impl SyntaxHighlighter {
                     "rust",
                     tree_sitter_rust::HIGHLIGHTS_QUERY,
                     tree_sitter_rust::INJECTIONS_QUERY,
-                    "",  // locals
+                    "", // locals
                 );
                 match result {
                     Ok(mut cfg) => {
@@ -103,12 +103,7 @@ impl SyntaxHighlighter {
         let style_map = theme.syntax_style_map();
         let styles = HIGHLIGHT_NAMES
             .iter()
-            .map(|name| {
-                style_map
-                    .get(name)
-                    .copied()
-                    .unwrap_or_default()
-            })
+            .map(|name| style_map.get(name).copied().unwrap_or_default())
             .collect();
 
         Some(Self { config, styles })
@@ -118,8 +113,8 @@ impl SyntaxHighlighter {
     ///
     /// This is the primary rendering method. It collects the source text
     /// **once**, runs tree-sitter **once**, and builds styled `Line`s for
-    /// each visible line. This is O(source_len) per call instead of
-    /// O(source_len × visible_lines) as the old per-line method was.
+    /// each visible line. This is `O(source_len)` per call instead of
+    /// `O(source_len x visible_lines)` as the old per-line method was.
     #[must_use]
     pub fn highlight_viewport(
         &self,
@@ -162,12 +157,7 @@ impl SyntaxHighlighter {
 
         // Run tree-sitter ONCE for the entire source
         let mut highlighter = Highlighter::new();
-        let Ok(events) = highlighter.highlight(
-            &self.config,
-            source_bytes,
-            None,
-            |_| None,
-        ) else {
+        let Ok(events) = highlighter.highlight(&self.config, source_bytes, None, |_| None) else {
             // Fallback: return plain text for all lines
             return line_texts
                 .into_iter()
@@ -203,19 +193,19 @@ impl SyntaxHighlighter {
                             let local_start = overlap_start - line_start;
                             let local_end = overlap_end - line_start;
 
-                            if let Some(text) = line_texts[line_idx].get(local_start..local_end) {
-                                if !text.is_empty() {
-                                    line_spans[line_idx].push(Span::styled(
-                                        text.to_string(),
-                                        current_style,
-                                    ));
-                                }
+                            if let Some(text) = line_texts[line_idx].get(local_start..local_end)
+                                && !text.is_empty()
+                            {
+                                line_spans[line_idx]
+                                    .push(Span::styled(text.to_string(), current_style));
                             }
                         }
                     }
                 }
                 Ok(HighlightEvent::HighlightStart(highlight)) => {
-                    current_style = self.styles.get(highlight.0)
+                    current_style = self
+                        .styles
+                        .get(highlight.0)
                         .copied()
                         .unwrap_or(default_style);
                 }

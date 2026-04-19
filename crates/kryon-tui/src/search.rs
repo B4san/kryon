@@ -94,7 +94,9 @@ impl SearchState {
 }
 
 impl Default for SearchState {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// State for the Go-to-Line prompt.
@@ -130,7 +132,9 @@ impl GoToLineState {
 }
 
 impl Default for GoToLineState {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[cfg(test)]

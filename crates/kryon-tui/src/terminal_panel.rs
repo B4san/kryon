@@ -3,10 +3,7 @@
 //! Provides a bottom panel that can spawn subprocesses, capture their
 //! stdout/stderr, and display the output with proper coloring.
 
-#![allow(
-    clippy::cast_possible_truncation,
-    clippy::struct_excessive_bools,
-)]
+#![allow(clippy::cast_possible_truncation, clippy::struct_excessive_bools)]
 
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
@@ -117,7 +114,8 @@ impl TerminalPanel {
             format!("{cmd} {}", args.join(" "))
         };
         self.output.push(OutputLine::System(format!(
-            "$ {display_cmd}  (in {})", cwd.display()
+            "$ {display_cmd}  (in {})",
+            cwd.display()
         )));
 
         let (tx, rx) = mpsc::unbounded_channel();
@@ -143,25 +141,33 @@ impl TerminalPanel {
                     let tx_out = tx.clone();
                     let tx_err = tx.clone();
 
-                    let stdout_handle = stdout.map(|out| tokio::spawn(async move {
-                        let reader = BufReader::new(out);
-                        let mut lines = reader.lines();
-                        while let Ok(Some(line)) = lines.next_line().await {
-                            let _ = tx_out.send(OutputLine::Stdout(line));
-                        }
-                    }));
+                    let stdout_handle = stdout.map(|out| {
+                        tokio::spawn(async move {
+                            let reader = BufReader::new(out);
+                            let mut lines = reader.lines();
+                            while let Ok(Some(line)) = lines.next_line().await {
+                                let _ = tx_out.send(OutputLine::Stdout(line));
+                            }
+                        })
+                    });
 
-                    let stderr_handle = stderr.map(|err| tokio::spawn(async move {
-                        let reader = BufReader::new(err);
-                        let mut lines = reader.lines();
-                        while let Ok(Some(line)) = lines.next_line().await {
-                            let _ = tx_err.send(OutputLine::Stderr(line));
-                        }
-                    }));
+                    let stderr_handle = stderr.map(|err| {
+                        tokio::spawn(async move {
+                            let reader = BufReader::new(err);
+                            let mut lines = reader.lines();
+                            while let Ok(Some(line)) = lines.next_line().await {
+                                let _ = tx_err.send(OutputLine::Stderr(line));
+                            }
+                        })
+                    });
 
                     // Wait for streams to finish
-                    if let Some(h) = stdout_handle { let _ = h.await; }
-                    if let Some(h) = stderr_handle { let _ = h.await; }
+                    if let Some(h) = stdout_handle {
+                        let _ = h.await;
+                    }
+                    if let Some(h) = stderr_handle {
+                        let _ = h.await;
+                    }
 
                     // Wait for process to exit
                     match child.wait().await {
@@ -172,16 +178,12 @@ impl TerminalPanel {
                             )));
                         }
                         Err(e) => {
-                            let _ = tx.send(OutputLine::System(format!(
-                                "Process error: {e}"
-                            )));
+                            let _ = tx.send(OutputLine::System(format!("Process error: {e}")));
                         }
                     }
                 }
                 Err(e) => {
-                    let _ = tx.send(OutputLine::System(format!(
-                        "Failed to start: {e}"
-                    )));
+                    let _ = tx.send(OutputLine::System(format!("Failed to start: {e}")));
                 }
             }
         });
@@ -242,29 +244,32 @@ impl TerminalPanel {
         let lines: Vec<Line<'_>> = self.output[start..end]
             .iter()
             .map(|line| match line {
-                OutputLine::Stdout(text) => {
-                    Line::from(Span::styled(format!("  {text}"), Style::default().fg(theme.fg)))
-                }
-                OutputLine::Stderr(text) => {
-                    Line::from(Span::styled(format!("  {text}"), Style::default().fg(theme.error)))
-                }
-                OutputLine::System(text) => {
-                    Line::from(Span::styled(
-                        format!("  {text}"),
-                        Style::default().fg(theme.accent).add_modifier(Modifier::DIM),
-                    ))
-                }
+                OutputLine::Stdout(text) => Line::from(Span::styled(
+                    format!("  {text}"),
+                    Style::default().fg(theme.fg),
+                )),
+                OutputLine::Stderr(text) => Line::from(Span::styled(
+                    format!("  {text}"),
+                    Style::default().fg(theme.error),
+                )),
+                OutputLine::System(text) => Line::from(Span::styled(
+                    format!("  {text}"),
+                    Style::default()
+                        .fg(theme.accent)
+                        .add_modifier(Modifier::DIM),
+                )),
             })
             .collect();
 
-        let paragraph = Paragraph::new(lines)
-            .wrap(Wrap { trim: false });
+        let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });
         frame.render_widget(paragraph, inner);
     }
 }
 
 impl Default for TerminalPanel {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Detect the run command for a file based on its extension.
@@ -323,7 +328,13 @@ pub fn detect_run_command(path: &Path) -> Option<RunConfig> {
         }),
         "cpp" | "cc" | "cxx" => Some(RunConfig {
             command: "g++".to_string(),
-            args: vec!["-o".to_string(), "a.out".to_string(), file, "&&".to_string(), "./a.out".to_string()],
+            args: vec![
+                "-o".to_string(),
+                "a.out".to_string(),
+                file,
+                "&&".to_string(),
+                "./a.out".to_string(),
+            ],
             use_file_dir: true,
         }),
         _ => None,
