@@ -1,8 +1,15 @@
 //! Syntax highlighting via tree-sitter.
 //!
-//! Provides incremental parsing and viewport-limited highlighting.
+//! Provides incremental parsing and **viewport-batched** highlighting.
 //! Each buffer gets its own `SyntaxHighlighter` instance that maintains
 //! a persistent syntax tree for efficient re-parsing on edits.
+//!
+//! ## Performance
+//!
+//! The key optimisation is `highlight_viewport()`: it collects the full
+//! source text **once**, runs tree-sitter **once** for the visible range,
+//! and slices the results per-line. This avoids the O(n × visible_lines)
+//! allocation that per-line highlighting would cause.
 
 #![allow(clippy::cast_possible_truncation)]
 
@@ -107,65 +114,104 @@ impl SyntaxHighlighter {
         Some(Self { config, styles })
     }
 
-    /// Highlight a single line of the buffer, returning a styled `Line`.
+    /// Highlight all visible lines in one batch.
     ///
-    /// If highlighting fails, returns plain unstyled text.
+    /// This is the primary rendering method. It collects the source text
+    /// **once**, runs tree-sitter **once**, and builds styled `Line`s for
+    /// each visible line. This is O(source_len) per call instead of
+    /// O(source_len × visible_lines) as the old per-line method was.
     #[must_use]
-    pub fn highlight_line(&self, rope: &Rope, line_idx: usize, default_style: Style) -> Line<'static> {
+    pub fn highlight_viewport(
+        &self,
+        rope: &Rope,
+        scroll: usize,
+        visible_lines: usize,
+        default_style: Style,
+    ) -> Vec<Line<'static>> {
         let line_count = rope.len_lines();
-        if line_idx >= line_count {
-            return Line::default();
+        let end_line = (scroll + visible_lines).min(line_count);
+        let num_lines = end_line.saturating_sub(scroll);
+
+        if num_lines == 0 {
+            return Vec::new();
         }
 
-        let line_slice = rope.line(line_idx);
-        let line_text: String = line_slice.chunks().collect();
-
-        // Calculate byte range for this line in the full document
-        let line_start_byte = rope.line_to_byte(line_idx);
-        let line_end_byte = if line_idx + 1 < line_count {
-            rope.line_to_byte(line_idx + 1)
-        } else {
-            rope.len_bytes()
-        };
-
-        // Get the full source for tree-sitter (it needs context for correct parsing)
+        // Collect full source ONCE
         let full_source: String = rope.chunks().collect();
         let source_bytes = full_source.as_bytes();
 
+        // Calculate byte ranges for each visible line
+        let mut line_byte_ranges: Vec<(usize, usize)> = Vec::with_capacity(num_lines);
+        for i in scroll..end_line {
+            let start = rope.line_to_byte(i);
+            let end = if i + 1 < line_count {
+                rope.line_to_byte(i + 1)
+            } else {
+                rope.len_bytes()
+            };
+            line_byte_ranges.push((start, end));
+        }
+
+        // Extract line texts for fallback and span building
+        let line_texts: Vec<String> = (scroll..end_line)
+            .map(|i| {
+                let line_slice = rope.line(i);
+                line_slice.chunks().collect()
+            })
+            .collect();
+
+        // Run tree-sitter ONCE for the entire source
         let mut highlighter = Highlighter::new();
         let Ok(events) = highlighter.highlight(
             &self.config,
             source_bytes,
-            None, // no injection callback
+            None,
             |_| None,
         ) else {
-            // Fallback: return plain text
-            return Line::from(Span::styled(line_text, default_style));
+            // Fallback: return plain text for all lines
+            return line_texts
+                .into_iter()
+                .map(|text| Line::from(Span::styled(text, default_style)))
+                .collect();
         };
 
-        // Build spans for this specific line
-        let mut spans: Vec<Span<'static>> = Vec::new();
+        // Allocate span buffers for each visible line
+        let mut line_spans: Vec<Vec<Span<'static>>> = vec![Vec::new(); num_lines];
         let mut current_style = default_style;
+
+        let viewport_start_byte = line_byte_ranges.first().map_or(0, |r| r.0);
+        let viewport_end_byte = line_byte_ranges.last().map_or(0, |r| r.1);
 
         for event in events {
             match event {
                 Ok(HighlightEvent::Source { start, end }) => {
-                    // Only include bytes that overlap with our line
-                    if end <= line_start_byte || start >= line_end_byte {
+                    // Skip events completely outside our viewport
+                    if end <= viewport_start_byte || start >= viewport_end_byte {
                         continue;
                     }
 
-                    let overlap_start = start.max(line_start_byte);
-                    let overlap_end = end.min(line_end_byte);
+                    // Distribute this source event across visible lines
+                    for (line_idx, &(line_start, line_end)) in line_byte_ranges.iter().enumerate() {
+                        if end <= line_start || start >= line_end {
+                            continue;
+                        }
 
-                    if overlap_start < overlap_end {
-                        let local_start = overlap_start - line_start_byte;
-                        let local_end = overlap_end - line_start_byte;
+                        let overlap_start = start.max(line_start);
+                        let overlap_end = end.min(line_end);
 
-                        if let Some(text) = line_text.get(local_start..local_end)
-                            && !text.is_empty() {
-                                spans.push(Span::styled(text.to_string(), current_style));
+                        if overlap_start < overlap_end {
+                            let local_start = overlap_start - line_start;
+                            let local_end = overlap_end - line_start;
+
+                            if let Some(text) = line_texts[line_idx].get(local_start..local_end) {
+                                if !text.is_empty() {
+                                    line_spans[line_idx].push(Span::styled(
+                                        text.to_string(),
+                                        current_style,
+                                    ));
+                                }
                             }
+                        }
                     }
                 }
                 Ok(HighlightEvent::HighlightStart(highlight)) => {
@@ -176,19 +222,22 @@ impl SyntaxHighlighter {
                 Ok(HighlightEvent::HighlightEnd) => {
                     current_style = default_style;
                 }
-                Err(_) => {
-                    // On error, return what we have so far
-                    break;
-                }
+                Err(_) => break,
             }
         }
 
-        // If no spans were produced, return the raw line
-        if spans.is_empty() {
-            Line::from(Span::styled(line_text, default_style))
-        } else {
-            Line::from(spans)
-        }
+        // Build final Lines: use spans if available, otherwise fallback to plain text
+        line_spans
+            .into_iter()
+            .zip(line_texts)
+            .map(|(spans, text)| {
+                if spans.is_empty() {
+                    Line::from(Span::styled(text, default_style))
+                } else {
+                    Line::from(spans)
+                }
+            })
+            .collect()
     }
 }
 
@@ -220,7 +269,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_highlight_rust_source() {
+    fn test_highlight_rust_viewport() {
         let theme = Theme::catppuccin_mocha();
         let highlighter = SyntaxHighlighter::for_extension("rs", &theme)
             .expect("Rust highlighter should be available");
@@ -233,12 +282,27 @@ mod tests {
         let rope = Rope::from_str(source);
         let default_style = Style::default();
 
-        // Highlight each line
-        for i in 0..rope.len_lines() {
-            let line = highlighter.highlight_line(&rope, i, default_style);
-            // Each line should produce at least one span
+        // Highlight entire viewport at once
+        let lines = highlighter.highlight_viewport(&rope, 0, rope.len_lines(), default_style);
+        assert_eq!(lines.len(), rope.len_lines());
+        for (i, line) in lines.iter().enumerate() {
             assert!(!line.spans.is_empty(), "Line {i} should have spans");
         }
+    }
+
+    #[test]
+    fn test_highlight_viewport_partial() {
+        let theme = Theme::catppuccin_mocha();
+        let highlighter = SyntaxHighlighter::for_extension("rs", &theme)
+            .expect("Rust highlighter should be available");
+
+        let source = "fn a() {}\nfn b() {}\nfn c() {}\nfn d() {}\n";
+        let rope = Rope::from_str(source);
+        let default_style = Style::default();
+
+        // Only highlight lines 1-2 (scroll=1, visible=2)
+        let lines = highlighter.highlight_viewport(&rope, 1, 2, default_style);
+        assert_eq!(lines.len(), 2);
     }
 
     #[test]

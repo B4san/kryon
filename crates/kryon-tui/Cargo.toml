@@ -16,3 +16,4 @@ tree-sitter-highlight = { workspace = true }
 tree-sitter-rust = { workspace = true }
 kryon-core = { workspace = true }
 kryon-security = { workspace = true }
+futures = { workspace = true }

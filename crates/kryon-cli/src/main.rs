@@ -14,7 +14,8 @@ struct Cli {
     path: Option<PathBuf>,
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     // Initialize logging
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -28,24 +29,32 @@ fn main() -> Result<()> {
 
     tracing::info!(path = ?cli.path, "starting kryon");
 
-    // Load content if a file was specified
+    // Load content and determine workspace root
     let mut app = if let Some(ref path) = cli.path {
         if path.is_file() {
             let content = std::fs::read_to_string(path)?;
             let canonical = path.canonicalize().unwrap_or_else(|_| path.clone());
-            kryon_tui::app::App::with_file(&content, canonical)
+            let workspace = canonical.parent().map(|p| p.to_path_buf());
+            kryon_tui::app::App::with_file(&content, canonical, workspace)
+        } else if path.is_dir() {
+            let canonical = path.canonicalize().unwrap_or_else(|_| path.clone());
+            kryon_tui::app::App::with_workspace(canonical)
         } else {
-            kryon_tui::app::App::new()
+            // Path doesn't exist yet — use current directory as workspace
+            let workspace = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+            kryon_tui::app::App::with_workspace(workspace)
         }
     } else {
-        kryon_tui::app::App::new()
+        // No path given — use current directory as workspace
+        let workspace = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+        kryon_tui::app::App::with_workspace(workspace)
     };
 
     // Initialize terminal
     let mut terminal = kryon_tui::terminal::init()?;
 
     // Run the event loop
-    let result = kryon_tui::app::run(&mut terminal, &mut app);
+    let result = kryon_tui::app::run(&mut terminal, &mut app).await;
 
     // Restore terminal
     kryon_tui::terminal::restore()?;

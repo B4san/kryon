@@ -16,7 +16,8 @@ ropey = "1.6"
 
 # TUI
 ratatui = "0.29"
-crossterm = "0.28"
+crossterm = { version = "0.28", features = ["event-stream"] }
+futures = "0.3"
 
 # Syntax highlighting
 tree-sitter = "0.25"

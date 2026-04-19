@@ -16,3 +16,4 @@ anyhow = { workspace = true }
 kryon-core = { workspace = true }
 kryon-tui = { workspace = true }
 kryon-security = { workspace = true }
+tokio = { workspace = true }

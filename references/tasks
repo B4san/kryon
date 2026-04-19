@@ -23,38 +23,38 @@
 - [x] Sidebar (Explorer placeholder)
 - [x] Status bar (line/col, modified indicator, status message)
 - [x] `kryon-cli/main` — CLI entry point with clap arg parsing
-- [ ] Syntax highlighting with tree-sitter
-- [ ] Theme system (Catppuccin Mocha initial)
-- [ ] File save operation (write to disk)
-- [ ] File explorer tree widget
+- [x] Syntax highlighting with tree-sitter
+- [x] Theme system (Catppuccin Mocha initial)
+- [x] File save operation (write to disk)
+- [x] File explorer tree widget
 
 ## Sprint 3: File Operations
-- [ ] Open file from CLI arg
-- [ ] Save file (Ctrl+S)
-- [ ] Save As
-- [ ] New file
-- [ ] Close tab
-- [ ] Unsaved changes guard
+- [x] Open file from CLI arg
+- [x] Save file (Ctrl+S)
+- [x] Save As
+- [x] New file
+- [x] Close tab
+- [x] Unsaved changes guard
 
 ## Sprint 4: Search & Navigation
-- [ ] Incremental search (Ctrl+F)
-- [ ] Go to line (Ctrl+G)
-- [ ] Word movement (Ctrl+Left/Right)
-- [ ] Page up/down with scroll
-- [ ] Selection operations
+- [x] Incremental search (Ctrl+F)
+- [x] Go to line (Ctrl+G)
+- [x] Word movement (Ctrl+Left/Right)
+- [x] Page up/down with scroll
+- [x] Selection operations
 
 ## Sprint 5: Polish
-- [ ] Mouse click to position cursor
-- [ ] Mouse scroll
-- [ ] Tab bar for multiple buffers
-- [ ] Command palette (Ctrl+Shift+P)
-- [ ] Better error messages / status bar
+- [x] Mouse click to position cursor
+- [x] Mouse scroll
+- [x] Tab bar for multiple buffers
+- [x] Command palette (Ctrl+Shift+P)
+- [x] Better error messages / status bar
 
 ## Sprint 6: Distribution
-- [ ] `cargo build --release` optimization
-- [ ] README.md
-- [ ] Installation instructions
-- [ ] Demo GIF/recording
+- [x] `cargo build --release` optimization
+- [x] README.md
+- [x] Installation instructions
+- [x] Demo GIF/recording
 
 ## Verification Status
 - **Tests**: 30 passing (21 core, 8 security, 1 doc-test)

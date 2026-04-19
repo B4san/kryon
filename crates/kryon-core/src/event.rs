@@ -152,6 +152,18 @@ pub enum EditorAction {
     /// Close the current buffer.
     CloseBuffer,
 
+    // -- Preview --
+    /// Toggle markdown preview mode.
+    TogglePreview,
+
+    // -- Terminal --
+    /// Toggle the integrated terminal panel.
+    ToggleTerminal,
+    /// Run the current file.
+    RunCurrentFile,
+    /// Stop the running process.
+    StopProcess,
+
     // -- Application --
     /// Quit the editor.
     Quit,
