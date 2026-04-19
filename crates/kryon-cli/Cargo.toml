@@ -1,0 +1,18 @@
+[package]
+name = "kryon"
+version.workspace = true
+edition.workspace = true
+description = "Terminal-first code editor"
+
+[[bin]]
+name = "kryon"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+kryon-core = { workspace = true }
+kryon-tui = { workspace = true }
+kryon-security = { workspace = true }

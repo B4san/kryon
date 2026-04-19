@@ -1,0 +1,98 @@
+# Kryon Terminal Editor — Implementation Walkthrough
+
+## What Was Built
+
+A fully functional terminal-based code editor in Rust with a modular workspace architecture.
+
+### Architecture
+
+```mermaid
+graph TB
+    CLI["kryon-cli<br/>(entry point)"] --> TUI["kryon-tui<br/>(rendering)"]
+    TUI --> Core["kryon-core<br/>(engine)"]
+    CLI --> Security["kryon-security<br/>(boundaries)"]
+    TUI --> Security
+    Core --> Ropey["ropey<br/>(rope data structure)"]
+    TUI --> Ratatui["ratatui<br/>(terminal UI)"]
+    TUI --> Crossterm["crossterm<br/>(terminal I/O)"]
+```
+
+### Crate Structure
+
+| Crate | Purpose | Key Files |
+|-------|---------|-----------|
+| `kryon-core` | UI-agnostic editor engine | [buffer.rs](file:///c:/Users/Sebas/Documents/Kryon/crates/kryon-core/src/buffer.rs), [cursor.rs](file:///c:/Users/Sebas/Documents/Kryon/crates/kryon-core/src/cursor.rs), [command.rs](file:///c:/Users/Sebas/Documents/Kryon/crates/kryon-core/src/command.rs), [event.rs](file:///c:/Users/Sebas/Documents/Kryon/crates/kryon-core/src/event.rs) |
+| `kryon-tui` | Terminal UI layer | [app.rs](file:///c:/Users/Sebas/Documents/Kryon/crates/kryon-tui/src/app.rs), [terminal.rs](file:///c:/Users/Sebas/Documents/Kryon/crates/kryon-tui/src/terminal.rs), [theme.rs](file:///c:/Users/Sebas/Documents/Kryon/crates/kryon-tui/src/theme.rs) |
+| `kryon-security` | Path validation & subprocess exec | [path.rs](file:///c:/Users/Sebas/Documents/Kryon/crates/kryon-security/src/path.rs), [subprocess.rs](file:///c:/Users/Sebas/Documents/Kryon/crates/kryon-security/src/subprocess.rs) |
+| `kryon-cli` | Binary entry point | [main.rs](file:///c:/Users/Sebas/Documents/Kryon/crates/kryon-cli/src/main.rs) |
+
+---
+
+## Features Implemented
+
+### Core Engine (kryon-core)
+- **TextBuffer**: O(log n) insert/delete/replace via ropey, line access, coordinate conversion
+- **CursorSet**: Multi-cursor support with anchor/head pairs, sorted deduplication, offset adjustment
+- **EditCommand**: Insert/Delete/Replace with full undo/redo support
+- **CommandHistory**: Capped undo/redo stacks with automatic redo-clearing on new edits
+- **EditorAction/EditorEvent**: Elm-architecture event types for all editor operations
+
+### TUI Layer (kryon-tui)
+- **Terminal setup**: Raw mode, alternate screen, mouse capture, panic recovery hook
+- **Editor rendering**: Line numbers, code content, cursor positioning, vertical scrolling
+- **Sidebar**: Togglable explorer panel (Ctrl+B)
+- **Status bar**: File name, line/col, modified indicator, status messages
+- **Key bindings**: Full keyboard mapping (Ctrl+Q quit, Ctrl+S save, Ctrl+Z/Y undo/redo, arrows, Home/End, etc.)
+- **File save**: Write buffer to disk with error handling
+- **Quit guard**: Double Ctrl+Q required to quit with unsaved changes
+
+### Theme System
+- **Catppuccin Mocha** (default) — warm dark theme
+- **Tokyo Night** — cool-toned dark theme  
+- **Dracula** — vibrant dark theme
+- 15 semantic color tokens per theme
+
+### Security (kryon-security)
+- **Path validation**: Traverse-safe path resolution, workspace boundary checks, filename sanitization
+- **Subprocess execution**: Safe `Command` wrapper without shell interpolation
+
+---
+
+## Verification Results
+
+| Check | Result |
+|-------|--------|
+| `cargo test --workspace` | **30 tests passed** ✅ |
+| `cargo clippy -- -D warnings` | **Clean** ✅ |
+| `cargo build --release` | **1.29 MB binary** ✅ |
+
+### Test Breakdown
+- `kryon-core`: 21 tests (buffer: 12, command: 4, cursor: 5)
+- `kryon-security`: 8 tests (path: 6, subprocess: 2)
+- Doc-tests: 1
+
+---
+
+## How to Run
+
+```bash
+# Open empty editor
+cargo run --release
+
+# Open a file
+cargo run --release -- path/to/file.rs
+
+# Run tests
+cargo test --workspace
+```
+
+---
+
+## What's Next (Sprint 3+)
+
+1. **File operations**: Save As, New file, Close tab
+2. **Search**: Incremental search (Ctrl+F), Go to line
+3. **Syntax highlighting**: Tree-sitter integration
+4. **Mouse support**: Click to position, scroll
+5. **Tab bar**: Multiple buffer tabs
+6. **Command palette**: Ctrl+Shift+P fuzzy finder

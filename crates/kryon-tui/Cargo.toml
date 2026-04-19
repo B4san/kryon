@@ -1,0 +1,18 @@
+[package]
+name = "kryon-tui"
+version.workspace = true
+edition.workspace = true
+description = "Terminal UI layer for the Kryon editor"
+
+[dependencies]
+ratatui = { workspace = true }
+crossterm = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+unicode-segmentation = { workspace = true }
+ropey = { workspace = true }
+tree-sitter = { workspace = true }
+tree-sitter-highlight = { workspace = true }
+tree-sitter-rust = { workspace = true }
+kryon-core = { workspace = true }
+kryon-security = { workspace = true }

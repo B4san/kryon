@@ -1,0 +1,62 @@
+# Kryon MVP Task Tracker
+
+## Sprint 0: Project Setup
+- [x] Initialize Rust workspace with Cargo.toml
+- [x] Create crate structure: `kryon-core`, `kryon-tui`, `kryon-security`, `kryon-cli`
+- [x] Configure rust-toolchain.toml, rustfmt, clippy
+- [x] Install VS Build Tools (MSVC linker)
+
+## Sprint 1: Core Engine
+- [x] `kryon-security` — path validation (`safe_resolve`, `validate_filename`, `is_within_workspace`)
+- [x] `kryon-security` — subprocess execution (`safe_exec`)
+- [x] `kryon-core/buffer` — TextBuffer (ropey wrapper) with insert/delete/replace/line access
+- [x] `kryon-core/cursor` — Cursor, CursorSet (anchor/head, multi-cursor, offset adjustment)
+- [x] `kryon-core/command` — EditCommand (insert/delete/replace), undo/redo CommandHistory
+- [x] `kryon-core/event` — EditorAction + EditorEvent enums (Elm-architecture)
+- [x] All tests pass (30 tests) + Clippy clean
+
+## Sprint 2: TUI Rendering (In Progress)
+- [x] `kryon-tui/terminal` — Terminal init/restore with panic hook
+- [x] `kryon-tui/app` — App struct with Elm-architecture event loop
+- [x] Key mapping (Ctrl+Q quit, Ctrl+S save, Ctrl+Z/Y undo/redo, etc.)
+- [x] Editor area with line numbers, code content, cursor positioning
+- [x] Sidebar (Explorer placeholder)
+- [x] Status bar (line/col, modified indicator, status message)
+- [x] `kryon-cli/main` — CLI entry point with clap arg parsing
+- [ ] Syntax highlighting with tree-sitter
+- [ ] Theme system (Catppuccin Mocha initial)
+- [ ] File save operation (write to disk)
+- [ ] File explorer tree widget
+
+## Sprint 3: File Operations
+- [ ] Open file from CLI arg
+- [ ] Save file (Ctrl+S)
+- [ ] Save As
+- [ ] New file
+- [ ] Close tab
+- [ ] Unsaved changes guard
+
+## Sprint 4: Search & Navigation
+- [ ] Incremental search (Ctrl+F)
+- [ ] Go to line (Ctrl+G)
+- [ ] Word movement (Ctrl+Left/Right)
+- [ ] Page up/down with scroll
+- [ ] Selection operations
+
+## Sprint 5: Polish
+- [ ] Mouse click to position cursor
+- [ ] Mouse scroll
+- [ ] Tab bar for multiple buffers
+- [ ] Command palette (Ctrl+Shift+P)
+- [ ] Better error messages / status bar
+
+## Sprint 6: Distribution
+- [ ] `cargo build --release` optimization
+- [ ] README.md
+- [ ] Installation instructions
+- [ ] Demo GIF/recording
+
+## Verification Status
+- **Tests**: 30 passing (21 core, 8 security, 1 doc-test)
+- **Clippy**: Clean (`-D warnings`)
+- **Build**: Compiles on MSVC target
